@@ -28,6 +28,7 @@ if (__name__ == "__main__"):
 
     pygame.draw.rect(screen, black, (200,150,100,50))
 
+    #test comment from second device
     while(True):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
