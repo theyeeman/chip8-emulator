@@ -1,8 +1,8 @@
 from graphics import *
 from chip8 import *
 from functions import *
-
-
+import pygame
+import sys
 
 def fillScreenTest():
     win = GraphWin("test", 640, 320, )
@@ -16,9 +16,23 @@ def fillScreenTest():
     win.getMouse()
     win.close()
 
-
 if (__name__ == "__main__"):
     cpu = chip8()
+    pygame.init()
+    screen = pygame.display.set_mode((640,480))
 
-    while(1):
-        print(hexToInt(getKey()))
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+
+    screen.fill(white)
+
+    pygame.draw.rect(screen, black, (200,150,100,50))
+
+    while(True):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            print(hexToInt(getKey()))
+            pygame.display.update()
