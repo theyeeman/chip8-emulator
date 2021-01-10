@@ -1,0 +1,24 @@
+**SPECIFICATIONS**
+
+- 4 kb of ram
+- display size of 64x32 pixels
+- PC (program counter) points to current instruction in memory
+- one 16-bit index register called "I" to point at locations in memory
+- a stack for 16-bit addresses to call functions and return from them
+- 8-bit delay timer which is decremented at a reate of 60 Hz
+- 8-bit sound timer which functions like the delay timer but also gives off beeping noise if timer val > 0
+- sixteen 8-bit general purposes CPU registers (variable registers)
+    - called v0 to vf, but vf is usually used as flag register
+
+**Notes**
+
+- something
+
+**Todo**
+- get graphics working
+    - graphics work but refresh rate is really slow
+    - maybe instead of using graphics library, just print a string or list to console?
+        - this might have the issue of the graphics scrolling
+    - look into pygame and frame buffers
+    - try changing keypress to use pygame library
+    
