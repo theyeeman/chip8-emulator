@@ -27,13 +27,29 @@ if (__name__ == "__main__"):
     screen.fill(white)
 
     pygame.draw.rect(screen, black, (200,150,100,50))
-
-    #test comment from second device
-    while(True):
+    
+    while (True):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+                
+            for i in range(50):
+                for j in range(50):
+                    pygame.draw.rect(screen, black, (200+i, 150+j, 100+i, 50+j))
+                    pygame.display.update()
+            for i in range(50, 0, -1):
+                for j in range(50, 0, -1):
+                    pygame.draw.rect(screen, black, (200+i, 150+j, 100+i, 50+j))
+                    pygame.display.update()            
+            
 
-            print(hexToInt(getKey()))
-            pygame.display.update()
+    #test comment from second device
+    #while(True):
+    #    for event in pygame.event.get():
+    #        if event.type == pygame.QUIT:
+    #            pygame.quit()
+    #            sys.exit()
+
+    #        #print(hexToInt(getKey()))
+    #        pygame.display.update()
