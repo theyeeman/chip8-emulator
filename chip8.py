@@ -3,7 +3,7 @@ class chip8:
         pc = 0
         ir = 0 
         v = [0] * 16
-        op = ""
+        op = 0x0
         memory = [0] * 4096
         stack = [0] * 16
         delayTimer = 0
@@ -13,6 +13,30 @@ class chip8:
         data = open(file, 'rb').read()
         for index, byte in enumerate(data):
             self.memory[index + offset] = byte
+            
+    def fetch(self):
+        op = memory[pc]
+        
+    def decode(self):
+        # need to parse opcode to see which one it  is
+        # maybe stuff opcode instructions here? Or create a dictionary of opcodes that can be 
+        # used for figuring out which opcode to execute
+        # maybe just use decode func for parsing the opcode and then call execute func
+        
+    def execute(self):
+        # Look up in dictionary
+    
+    def updateTimers(self):
+        # update timer stuff here
+        
+    def runOneCycle(self):
+        fetch()
+        decode()
+        updateTimers()
+        
+        
+        
+        
 
     
     

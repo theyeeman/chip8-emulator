@@ -12,8 +12,16 @@
 
 **Notes**
 
-- something
-
+- CPU execution cycle loop
+    - get opcode (fetch)
+    - figure out what opcode is (decode)
+    - execute opcode (execute)
+    - update timers
+- Emulation loop
+    - get user input
+    - run one cpu execution loop
+    - update screen
+    
 **Todo**
 - get graphics working
     - graphics work but refresh rate is really slow
