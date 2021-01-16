@@ -1,18 +1,18 @@
 # Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 import random
 
-class chip8:
+class chip8_CPU:
     def __init__(self):
-        pc = 0 # Program counter
-        ir = 0 # Index Register
-        v = [0] * 16 # CPU Registers
-        op = 0x0 # Current Opcode
-        sp = 0 # Stack pointer
-        keyPressed = 0
-        memory = [0] * 4096
-        stack = [0] * 16
-        delayTimer = 0
-        soundTimer = 0
+        self.pc = 0 # Program counter
+        self.ir = 0 # Index Register
+        self.v = [0] * 16 # CPU Registers
+        self.op = 0x0 # Current Opcode
+        self.sp = 0 # Stack pointer
+        self.keyPressed = 0
+        self.memory = [0] * 4096
+        self.stack = [0] * 16
+        self.delayTimer = 0
+        self.soundTimer = 0
 
     def loadROM(self, file, offset):
         data = open(file, 'rb').read()
@@ -27,8 +27,8 @@ class chip8:
         return key
             
     def fetch(self):
-        self.op = memory[pc] << 8 | memory[pc + 1]
-        pc += 2
+        self.op = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
+        self.pc += 2
         
     def decode(self):
         # need to parse opcode to see which one it  is
@@ -61,7 +61,7 @@ class chip8:
         if (msd == 0x2):
             # 2nnn - CALL addr. Increment SP, push current PC to stack, then set PC to nnn
             self.sp += 1
-            self.stack.push(self.pc)
+            self.stack.insert(0, self.pc)
             self.pc = nnn
 
         if (msd == 0x3):
@@ -165,7 +165,7 @@ class chip8:
 
         if (msd == 0xD):
             # Dxyn - DRW Vx, Vy, nibble. Display n-byte sprite starting at mem location IR at (Vx, Vy), set Vf = collision
-            pass
+            
 
         if (msd == 0xE):
             if (lsd == 0xE):
@@ -218,19 +218,19 @@ class chip8:
                 num = num % 10
                 onesDigit = num
 
-                self.memory[ir] = format(hundredsDigit, 'x')
-                self.memory[ir + 1] = format(tensDigit, 'x')
-                self.memory[ir + 2] = format(onesDigit, 'x')
+                self.memory[self.ir] = format(hundredsDigit, 'x')
+                self.memory[self.ir + 1] = format(tensDigit, 'x')
+                self.memory[self.ir + 2] = format(onesDigit, 'x')
 
             if (y == 0x5):
                 # Fx55 - LD [I], Vx. Store registers V0 to Vx in mem location starting at IR
                 for i in range(x + 1):
-                    memory[ir + i] = self.v[i]
+                    self.memory[self.ir + i] = self.v[i]
 
             if (y == 0x6):
                 # Fx65 - LD Vx, [I]. Read registers V0 to Vx from mem location starting at IR
                 for i in range(x + 1):
-                    self.v[i] = memory[ir + i]
+                    self.v[i] = self.memory[self.ir + i]
 
     def execute(self):
         # Look up in dictionary
@@ -242,6 +242,6 @@ class chip8:
         pass
         
     def runOneCycle(self):
-        fetch()
-        decode()
-        updateTimers()
+        self.fetch()
+        self.decode()
+        self.updateTimers()
