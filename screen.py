@@ -44,12 +44,54 @@ class chip8_Screen:
         x_pos = x * self.scale
         y_pos = y * self.scale
 
-        pixelState = self.surface.get_at(x_pos, y_pos)
+        pixelState = self.surface.get_at((x_pos, y_pos))
 
         if (pixelState == pixelOff):
             return False
         else:
             return True
+
+    def byteToPixel(self, x, y, byte) -> bool:
+        # byte is 8-bits
+        # Return whether pixel was turned off
+
+        setVF = False
+
+        for i in range(7, -1, -1):
+            mask = 1
+            if (byte & (mask << i) != 0):
+                # Pixel at (x, y) commanded on
+                if (not self.getPixel(x + 7 - i, y)):
+                    # Pixel is off, so turn on this pixel
+                    self.setPixel(x + 7 - i, y)
+                else:
+                    # Pixel is already on, so turn this pixel off and set v[0xF]
+                    self.resetPixel(x + 7 - i, y)
+                    setVF = True
+        
+        return setVF
+
+    def byteToSprite(self, x, y, byteList) -> bool:
+        # Each byte is 8-bits
+        # Return whether a pixel was turned off
+
+        setVF = False
+
+        for j in range(len(byteList)):
+            byte = byteList[j]
+            for i in range(7, -1, -1):
+                mask = 1
+                if (byte & (mask << i) != 0):
+                    # Pixel at (x, y) commanded on
+                    if (not self.getPixel(x + 7 - i, y + j)):
+                        # Pixel is off, so turn on this pixel
+                        self.setPixel(x + 7 - i, y + j)
+                    else:
+                        # Pixel is already on, so turn this pixel off and set v[0xF]
+                        self.resetPixel(x + 7 - i, y + j)
+                        setVF = True
+        
+        return setVF
 
     def getWidth(self):
         return self.width
@@ -72,7 +114,4 @@ class chip8_Screen:
     def destroy():
         # Destroy the current screen
 
-        display.quite()
-
-    
-
+        display.quit()

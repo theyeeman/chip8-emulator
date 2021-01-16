@@ -1,13 +1,33 @@
 # Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 import random
+from pygame import *
+from pygame.locals import (
+    K_1,
+    K_2,
+    K_3,
+    K_4,
+    K_q,
+    K_w,
+    K_e,
+    K_r,
+    K_a,
+    K_s,
+    K_d,
+    K_f,
+    K_z,
+    K_x,
+    K_c,
+    K_v
+)
 
 class chip8_CPU:
-    def __init__(self):
-        self.pc = 0 # Program counter
-        self.ir = 0 # Index Register
-        self.v = [0] * 16 # CPU Registers
-        self.op = 0x0 # Current Opcode
-        self.sp = 0 # Stack pointer
+    def __init__(self, screen):
+        self.screen = screen
+        self.pc = 0  # Program counter
+        self.ir = 0  # Index Register
+        self.v = [0] * 16  # CPU Registers
+        self.op = 0x0  # Current Opcode
+        self.sp = 0  # Stack pointer
         self.keyPressed = 0
         self.memory = [0] * 4096
         self.stack = [0] * 16
@@ -18,25 +38,63 @@ class chip8_CPU:
         data = open(file, 'rb').read()
         for index, byte in enumerate(data):
             self.memory[index + offset] = byte
-            
-    def getKeyPress(self):
-        key = -1
 
-        #get key pressed and set it to key
+    def getKeyPress(self, wait=False):
+        isValid = False
 
-        return key
-            
+        if (wait):
+            while (not isValid):
+                pressed_keys = key.get_pressed()
+                isValid, value = self.keyValid(pressed_keys)
+        else:
+            pressed_keys = key.get_pressed()
+            isValid, value = self.keyValid(pressed_keys)
+
+        return value     
+
+    def keyValid(self, keys) -> (bool, int):
+        if (keys[K_x]):
+            return True, 0x0
+        elif (keys[K_1]):
+            return True, 0x1
+        elif (keys[K_2]):
+            return True, 0x2
+        elif (keys[K_3]):
+            return True, 0x3
+        elif (keys[K_q]):
+            return True, 0x4
+        elif (keys[K_w]):
+            return True, 0x5
+        elif (keys[K_e]):
+            return True, 0x6
+        elif (keys[K_a]):
+            return True, 0x7
+        elif (keys[K_s]):
+            return True, 0x8
+        elif (keys[K_d]):
+            return True, 0x9
+        elif (keys[K_z]):
+            return True, 0xA
+        elif (keys[K_c]):
+            return True, 0xB
+        elif (keys[K_4]):
+            return True, 0xC
+        elif (keys[K_r]):
+            return True, 0xD
+        elif (keys[K_f]):
+            return True, 0xE
+        elif (keys[K_v]):
+            return True, 0xF
+        else:
+            return False, -1
+
     def fetch(self):
         self.op = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
         self.pc += 2
-        
+
     def decode(self):
-        # need to parse opcode to see which one it  is
-        # maybe stuff opcode instructions here? Or create a dictionary of opcodes that can be 
-        # used for figuring out which opcode to execute
-        # maybe just use decode func for parsing the opcode and then call execute func
-        
         # 0x[msd][x][y][lsd]
+
         msd = self.op >> 12
         x = (self.op & 0x0F00) >> 8
         y = (self.op & 0x00F0) >> 4
@@ -44,11 +102,11 @@ class chip8_CPU:
 
         kk = self.op & 0x00FF
         nnn = self.op & 0x0FFF
-        
+
         if (msd == 0):
             if (lsd == 0):
                 # 00E0 - CLS. Clear display
-                pass
+                self.screen.clearScreen()
 
             else:
                 # 00EE - RET. Return from subroutine. Set PC to top of stack, then decrement SP
@@ -111,7 +169,7 @@ class chip8_CPU:
                 if (val > 0xFFFF):
                     val = val - 0xFF
                     self.v[0xF] = 0x1
-                
+
                 self.v[x] = val
 
             if (lsd == 0x5):
@@ -165,7 +223,17 @@ class chip8_CPU:
 
         if (msd == 0xD):
             # Dxyn - DRW Vx, Vy, nibble. Display n-byte sprite starting at mem location IR at (Vx, Vy), set Vf = collision
-            
+
+            self.v[0xF] = 0
+            pixelCollision = False
+
+            for i in range(lsd):
+                self.screen.byteToPixel(self.v[x], self.v[y] + i, self.memory[self.ir + i])
+
+            if (pixelCollision):
+                self.v[0xF] = 1
+
+            self.screen.update()
 
         if (msd == 0xE):
             if (lsd == 0xE):
@@ -189,7 +257,7 @@ class chip8_CPU:
                     key = -1
                     while (key == -1):
                         key = self.getKeyPress()
-                    
+
                     self.v[x] = key
 
             if (y == 0x1):
@@ -232,16 +300,17 @@ class chip8_CPU:
                 for i in range(x + 1):
                     self.v[i] = self.memory[self.ir + i]
 
-    def execute(self):
-        # Look up in dictionary
-        # Might not need this function because execution is handled in decode func
-        pass
-
-    def updateTimers(self):
-        # update timer stuff here
-        pass
+    def updateTimers(self, cycleTime):
+        self.delayTimer = self.delayTimer - cycleTime
+        self.soundTimer = self.soundTimer - cycleTime
         
-    def runOneCycle(self):
+        if (self.delayTimer < 0):
+            self.delayTimer = 0
+        if (self.soundTimer < 0):
+            self.soundTimer = 0
+
+    def runOneCycle(self, cycleTime):
+        self.keyPressed = self.getKeyPress(False)
         self.fetch()
         self.decode()
-        self.updateTimers()
+        self.updateTimers(cycleTime)

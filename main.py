@@ -1,5 +1,5 @@
 from screen import chip8_Screen
-#from chip8 import *
+from chip8 import *
 #from functions import *
 import pygame
 import sys
@@ -23,28 +23,6 @@ fontSet = {
     15 : [0xF0, 0x80, 0xF0, 0x80, 0x80]
     }
 
-def testDraw(myscreen, num):
-    if (num < 0 or num > 15):
-        return None
-    
-    font = fontSet[num]
-
-    row = 0
-    column = 0
-
-    for line in font:
-        for _ in range(8):
-            if (line & 1 == 1):
-                myscreen.setPixel(row, column)
-                print("setting pixel")
-            line >> 1
-            row = row + 1
-
-        column = column + 1
-        row = 0
-    
-    myscreen.update()
-
 if (__name__ == "__main__"):
     # Initalize all required variables
     
@@ -58,6 +36,7 @@ if (__name__ == "__main__"):
 
     myScreen = chip8_Screen(10)
     myScreen.initDisplay()
+    cpu = chip8_CPU(myScreen)
 
     running = True
 
@@ -67,13 +46,13 @@ if (__name__ == "__main__"):
     #     column = 1
 
     #     for line in font:
-    #         print(bin(line))
+    #         #print(bin(line))
     #         for _ in range(8):
     #             if (line & 0x80 == 0b10000000):
     #                 myScreen.setPixel(row, column)
-    #                 print("setting pixel", row, column)
+    #                 #print("setting pixel", row, column)
     #             line = (line << 1) & 0xFF
-    #             print(line)
+    #             #print(line)
     #             row = row + 1
 
     #         column = column + 1
@@ -81,13 +60,29 @@ if (__name__ == "__main__"):
         
     # myScreen.update()
 
-    while running:
-        for event in pygame.event.get():
 
+    while running:
+
+        clock = pygame.time.Clock()
+
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        
+        # keyPress = cpu.getKeyPress(False)
 
-        #myScreen.setPixel(10, 5)
-        #myScreen.update()
+        # if (keyPress != -1):
+        #     num = fontSet[keyPress]
+
+        #     myScreen.clearScreen()
+
+        #     myScreen.byteToSprite(1, 1, num)
+
+        #     myScreen.update()
+
+        
+        clock.tick(30)
+    
+    pygame.quit()
         
     
