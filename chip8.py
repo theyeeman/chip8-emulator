@@ -1,6 +1,7 @@
 # Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 from random import randint
 import pygame
+import winsound
 from pygame.locals import (
     K_1,
     K_2,
@@ -22,7 +23,7 @@ from pygame.locals import (
     KEYUP
 )
 
-class chip8_CPU:
+class chip8_Emulator:
     def __init__(self, screen):
         self.screen = screen
         self.pc = 0x200  # Program counter
@@ -36,6 +37,9 @@ class chip8_CPU:
         self.delayTimer = 0
         self.soundTimer = 0
         self.running = True
+        self.beepFreq = 2500
+        self.beepDuration = 1000
+
 
         fontSet = {
             0 :[0xF0, 0x90, 0x90, 0x90, 0xF0],
@@ -56,36 +60,20 @@ class chip8_CPU:
             15 : [0xF0, 0x80, 0xF0, 0x80, 0x80]
             }
 
+        # Load font set into memory
         i = 0
         for font in fontSet.values():
             for byte in font:
                 self.memory[i] = byte
                 i += 1
 
-
-        
-
     def loadROM(self, file, offset):
         data = open(file, 'rb').read()
         for index, byte in enumerate(data):
             self.memory[index + offset] = byte
 
-    # def getKeyPress(self, wait=False):
-    #     key = -1
-    #     if (wait):
-    #         while (key == -1):
-    #             for event in pygame.event.get():
-    #                 if (event.type == KEYDOWN):
-    #                     key = self.keyMap(event.key)
-    #     else:
-    #         for event in pygame.event.get():
-    #             if (event.type == KEYDOWN):
-    #                 key = self.keyMap(event.key)
-
-    #     return key   
-
     def eventHandler(self):
-        # Handles events for closing pygame window, keypresses, and timers
+        # Handles events for closing pygame window, keypresses, and sound timer beep
         self.keyPressed = -1
 
         for event in pygame.event.get():
@@ -95,7 +83,12 @@ class chip8_CPU:
             if (event.type == KEYDOWN):
                 self.keyPressed = self.keyMap(event.key)
 
+        if (self.soundTimer > 0):
+            winsound.Beep(self.beepFreq, self.beepDuration)
+
     def keyMap(self, keys):
+        # Converts valid key press into hex value. Invalid key press
+        # is treated as no key pressed and has value -1
         if (keys == K_x):
             return 0x0
         elif (keys == K_1):
@@ -131,13 +124,13 @@ class chip8_CPU:
         else:
             return -1
 
-    def fetch(self):
+    def fetchOpcode(self):
         self.op = 0x0
         self.op = (self.memory[self.pc] << 8) | self.memory[self.pc + 1]
         self.pc += 2
 
-    def decode(self):
-        # Parsing opcode in format 0x[msd][x][y][lsd]
+    def executeOpcode(self):
+        # Parsing opcode into format 0x[msd][x][y][lsd]
         msd = self.op >> 12
         x = (self.op & 0x0F00) >> 8
         y = (self.op & 0x00F0) >> 4
@@ -228,15 +221,8 @@ class chip8_CPU:
 
             if (lsd == 0x6):
                 # 8xy6 - SHR Vx {, Vy}. Set Vx = Vx SHR 1. If lsb of Vx is 1, then Vf = 1, else Vf = 0. Then Vx = Vx \ 2
-                #print("SHR")
-                #print("Before: ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
                 self.v[0xF] = self.v[x] & 0x1
                 self.v[x] = self.v[x] >> 1
-                #print("After:  ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
-
-                # leastBit = int(bin(self.v[x])[-1])
-                # self.v[x] = self.v[x] >> 1
-                # self.v[0xF] = leastBit
 
             if (lsd == 0x7):
                 # 8xy7 - SUBN Vx, Vy. Set Vx = Vy - Vx, set Vf = NOT borrow
@@ -251,15 +237,8 @@ class chip8_CPU:
 
             if (lsd == 0xE):
                 # 8xyE - SHL Vx {, Vy}. Set Vx = Vx SHL 1. If msb of Vx is 1, then Vf = 1, else 0. Then Vx = Vx * 2
-                #print("SHL")
-                #print("Before: ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
                 self.v[0xF] = self.v[x] & 0x80
                 self.v[x] = (self.v[x] << 1) & 0xFF
-                #print("After:  ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
-
-                # mostBit = int(bin(self.v[x])[2])
-                # self.v[x] = self.v[x] << 1
-                # self.v[0xF] = mostBit
 
         if (msd == 0x9):
             # 9xy0 - SNE Vx, Vy. Skip next instruction if Vx != Vy (increase PC by 2)
@@ -289,17 +268,6 @@ class chip8_CPU:
 
             if (pixelCollision):
                 self.v[0xF] = 1
-
-            # self.v[0xF] = 0
-
-            # byteList = []
-            # for i in range(lsd):
-            #     byteList.append(self.memory[self.ir + i])
-
-            # pixelCollision = self.screen.byteToSprite(self.v[x], self.v[y], byteList)
-
-            # if (pixelCollision):
-            #     self.v[0xF] = 1
 
             self.screen.update()
 
@@ -378,7 +346,6 @@ class chip8_CPU:
 
     def runOneCycle(self):
         self.eventHandler()
-        self.fetch()
-        self.decode()
-        #self.screen.update()
+        self.fetchOpcode()
+        self.executeOpcode()
         self.decrementTimers()
