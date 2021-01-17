@@ -61,12 +61,12 @@ class chip8_Screen:
             mask = 1
             if (byte & (mask << i) != 0):
                 # Pixel at (x, y) commanded on
-                if (not self.getPixel(x + 7 - i, y)):
+                if (not self.getPixel((x + 7 - i) % 64, y % 32)):
                     # Pixel is off, so turn on this pixel
-                    self.setPixel(x + 7 - i, y)
+                    self.setPixel((x + 7 - i) % 64, y % 32)
                 else:
                     # Pixel is already on, so turn this pixel off and set v[0xF]
-                    self.resetPixel(x + 7 - i, y)
+                    self.resetPixel((x + 7 - i) % 64, y % 32)
                     setVF = True
         
         return setVF

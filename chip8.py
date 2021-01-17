@@ -1,6 +1,7 @@
 # Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 import random
-from pygame import *
+#from pygame import *
+import pygame
 from pygame.locals import (
     K_1,
     K_2,
@@ -17,7 +18,9 @@ from pygame.locals import (
     K_z,
     K_x,
     K_c,
-    K_v
+    K_v,
+    KEYDOWN,
+    KEYUP
 )
 
 class chip8_CPU:
@@ -28,65 +31,78 @@ class chip8_CPU:
         self.v = [0] * 16  # CPU Registers
         self.op = 0x0  # Current Opcode
         self.sp = 0  # Stack pointer
-        self.keyPressed = 0
+        self.keyPressed = -1
         self.memory = [0] * 4096
         self.stack = [0] * 16
         self.delayTimer = 0
         self.soundTimer = 0
+        self.running = True
 
     def loadROM(self, file, offset):
         data = open(file, 'rb').read()
         for index, byte in enumerate(data):
             self.memory[index + offset] = byte
 
-    def getKeyPress(self, wait=False):
-        isValid = False
+    # def getKeyPress(self, wait=False):
+    #     key = -1
+    #     if (wait):
+    #         while (key == -1):
+    #             for event in pygame.event.get():
+    #                 if (event.type == KEYDOWN):
+    #                     key = self.keyMap(event.key)
+    #     else:
+    #         for event in pygame.event.get():
+    #             if (event.type == KEYDOWN):
+    #                 key = self.keyMap(event.key)
 
-        if (wait):
-            while (not isValid):
-                pressed_keys = key.get_pressed()
-                isValid, value = self.keyValid(pressed_keys)
+    #     return key   
+
+    def eventHandler(self):
+        # Handles events for closing pygame window, keypresses, and timers
+        self.keyPressed = -1
+
+        for event in pygame.event.get():
+            if (event.type == pygame.QUIT):
+                self.running = False
+
+            if (event.type == KEYDOWN):
+                self.keyPressed = self.keyMap(event.key)
+
+    def keyMap(self, keys):
+        if (keys == K_x):
+            return 0x0
+        elif (keys == K_1):
+            return 0x1
+        elif (keys == K_2):
+            return 0x2
+        elif (keys == K_3):
+            return 0x3
+        elif (keys == K_q):
+            return 0x4
+        elif (keys == K_w):
+            return 0x5
+        elif (keys == K_e):
+            return 0x6
+        elif (keys == K_a):
+            return 0x7
+        elif (keys == K_s):
+            return 0x8
+        elif (keys == K_d):
+            return 0x9
+        elif (keys == K_z):
+            return 0xA
+        elif (keys == K_c):
+            return 0xB
+        elif (keys == K_4):
+            return 0xC
+        elif (keys == K_r):
+            return 0xD
+        elif (keys == K_f):
+            return 0xE
+        elif (keys == K_v):
+            return 0xF
         else:
-            pressed_keys = key.get_pressed()
-            isValid, value = self.keyValid(pressed_keys)
-
-        return value     
-
-    def keyValid(self, keys) -> (bool, int):
-        if (keys[K_x]):
-            return True, 0x0
-        elif (keys[K_1]):
-            return True, 0x1
-        elif (keys[K_2]):
-            return True, 0x2
-        elif (keys[K_3]):
-            return True, 0x3
-        elif (keys[K_q]):
-            return True, 0x4
-        elif (keys[K_w]):
-            return True, 0x5
-        elif (keys[K_e]):
-            return True, 0x6
-        elif (keys[K_a]):
-            return True, 0x7
-        elif (keys[K_s]):
-            return True, 0x8
-        elif (keys[K_d]):
-            return True, 0x9
-        elif (keys[K_z]):
-            return True, 0xA
-        elif (keys[K_c]):
-            return True, 0xB
-        elif (keys[K_4]):
-            return True, 0xC
-        elif (keys[K_r]):
-            return True, 0xD
-        elif (keys[K_f]):
-            return True, 0xE
-        elif (keys[K_v]):
-            return True, 0xF
-        else:
-            return False, -1
+            return -1
 
     def fetch(self):
         self.op = 0x0
@@ -165,7 +181,7 @@ class chip8_CPU:
 
             if (lsd == 0x3):
                 # 8xy3 - XOR Vx, Vy. Set Vx = Vx XOR Vy
-                self.v[x] = self.v[x] ^ self.v[y]
+                self.v[x] = self.v[x] ^ self.v[y] 
 
             if (lsd == 0x4):
                 # 8xy4 - ADD Vx, Vy. Set Vx = Vx + Vy, set Vf = carry
@@ -191,9 +207,7 @@ class chip8_CPU:
             if (lsd == 0x6):
                 # 8xy6 - SHR Vx {, Vy}. Set Vx = Vx SHR 1. If lsb of Vx is 1, then Vf = 1, else Vf = 0. Then Vx = Vx \ 2
                 self.v[0xF] = self.v[x] & 0x1
-                #print("before SHR: ", bin(self.v[x]))
                 self.v[x] = self.v[x] >> 1
-                #print("after SHR: ", bin(self.v[x]))
 
             if (lsd == 0x7):
                 # 8xy7 - SUBN Vx, Vy. Set Vx = Vy - Vx, set Vf = NOT borrow
@@ -235,10 +249,21 @@ class chip8_CPU:
             pixelCollision = False
 
             for i in range(lsd):
-                self.screen.byteToPixel(self.v[x], self.v[y] + i, self.memory[self.ir + i])
+                pixelCollision = self.screen.byteToPixel(self.v[x], self.v[y] + i, self.memory[self.ir + i])
 
             if (pixelCollision):
                 self.v[0xF] = 1
+
+            # self.v[0xF] = 0
+
+            # byteList = []
+            # for i in range(lsd):
+            #     byteList.append(self.memory[self.ir + i])
+
+            # pixelCollision = self.screen.byteToSprite(self.v[x], self.v[y], byteList)
+
+            # if (pixelCollision):
+            #     self.v[0xF] = 1
 
             self.screen.update()
 
@@ -261,11 +286,10 @@ class chip8_CPU:
 
                 if (lsd == 0xA):
                     # Fx0A - LD Vx, key. Store value of key press in Vx. All exeution is stopped until key is pressed.
-                    key = -1
-                    while (key == -1):
-                        key = self.getKeyPress()
+                    while (self.keyPressed == -1):
+                        self.eventHandler()
 
-                    self.v[x] = key
+                    self.v[x] = self.keyPressed
 
             if (y == 0x1):
                 if (lsd == 0x5):
@@ -287,7 +311,6 @@ class chip8_CPU:
             if (y == 0x3):
                 # Fx33 - LD B, Vx. Store BCD represention of Vx in mem location IR, IR+1, and I+2
                 num = self.v[x]
-                print("num", num)
                 hundredsDigit = num // 100
                 num = num % 100
                 tensDigit = num // 10
@@ -297,8 +320,6 @@ class chip8_CPU:
                 self.memory[self.ir] = hundredsDigit
                 self.memory[self.ir + 1] = tensDigit
                 self.memory[self.ir + 2] = onesDigit
-
-                print(self.memory[self.ir], self.memory[self.ir + 1], self.memory[self.ir + 2])
 
             if (y == 0x5):
                 # Fx55 - LD [I], Vx. Store registers V0 to Vx in mem location starting at IR
@@ -312,7 +333,7 @@ class chip8_CPU:
 
     def decrementTimers(self):
         self.delayTimer -= 1
-        self.soundTimer -=1
+        self.soundTimer -= 1
         
         if (self.delayTimer < 0):
             self.delayTimer = 0
@@ -320,7 +341,7 @@ class chip8_CPU:
             self.soundTimer = 0
 
     def runOneCycle(self):
-        self.keyPressed = self.getKeyPress(False)
+        self.eventHandler()
         self.fetch()
         self.decode()
         self.decrementTimers()

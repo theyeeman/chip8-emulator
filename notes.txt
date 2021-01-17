@@ -23,5 +23,5 @@
     - update screen
     
 **Todo**
-- screen rollover
+- bug fixes
     

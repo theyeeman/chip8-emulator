@@ -4,6 +4,25 @@ from chip8 import *
 import pygame
 import sys
 
+from pygame.locals import (
+    K_1,
+    K_2,
+    K_3,
+    K_4,
+    K_q,
+    K_w,
+    K_e,
+    K_r,
+    K_a,
+    K_s,
+    K_d,
+    K_f,
+    K_z,
+    K_x,
+    K_c,
+    K_v
+)
+
 fontSet = {
     0 :[0xF0, 0x90, 0x90, 0x90, 0xF0],
     1 : [0x20, 0x60, 0x20, 0x20, 0x70],
@@ -25,52 +44,15 @@ fontSet = {
 
 if (__name__ == "__main__"):
     # Initalize all required variables
-    
-    # Emulation loop
-    #while(True):
-        # Get keypress
-        
-        # Emulate one CPU cycle
-        
-        # Update graphics is drawing flag is set
-
     myScreen = chip8_Screen(10)
     myScreen.initDisplay()
     cpu = chip8_CPU(myScreen)
 
-    running = True
+    cpu.loadROM("airplane.ch8", 0x200)
 
-    # for i in range(8):
-    #     font = fontSet[i]
-    #     row = i * 8
-    #     column = 1
-
-    #     for line in font:
-    #         #print(bin(line))
-    #         for _ in range(8):
-    #             if (line & 0x80 == 0b10000000):
-    #                 myScreen.setPixel(row, column)
-    #                 #print("setting pixel", row, column)
-    #             line = (line << 1) & 0xFF
-    #             #print(line)
-    #             row = row + 1
-
-    #         column = column + 1
-    #         row = i * 8
-        
-    # myScreen.update()
-
-    #cpu.loadROM("IBM.ch8", 0x200)
-    #cpu.loadROM("Airplane.ch8", 0x200)
-    #cpu.loadROM("test_opcode.ch8", 0x200)
-
-    while running:
+    while (cpu.running):
 
         clock = pygame.time.Clock()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
 
         cpu.runOneCycle()
         cpu.screen.update()
@@ -79,5 +61,3 @@ if (__name__ == "__main__"):
         clock.tick(60)
     
     pygame.quit()
-        
-    
