@@ -1,6 +1,5 @@
 # Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-import random
-#from pygame import *
+from random import randint
 import pygame
 from pygame.locals import (
     K_1,
@@ -37,6 +36,34 @@ class chip8_CPU:
         self.delayTimer = 0
         self.soundTimer = 0
         self.running = True
+
+        fontSet = {
+            0 :[0xF0, 0x90, 0x90, 0x90, 0xF0],
+            1 : [0x20, 0x60, 0x20, 0x20, 0x70],
+            2 : [0xF0, 0x10, 0xF0, 0x80, 0xF0],
+            3 : [0xF0, 0x10, 0xF0, 0x10, 0xF0],
+            4 : [0x90, 0x90, 0xF0, 0x10, 0x10],
+            5 : [0xF0, 0x80, 0xF0, 0x10, 0xF0],
+            6 : [0xF0, 0x80, 0xF0, 0x90, 0xF0],
+            7 : [0xF0, 0x10, 0x20, 0x40, 0x40],
+            8 : [0xF0, 0x90, 0xF0, 0x90, 0xF0],
+            9 : [0xF0, 0x90, 0xF0, 0x10, 0xF0],
+            10 : [0xF0, 0x90, 0xF0, 0x90, 0x90],
+            11 : [0xE0, 0x90, 0xE0, 0x90, 0xE0],
+            12 : [0xF0, 0x80, 0x80, 0x80, 0xF0],
+            13 : [0xE0, 0x90, 0x90, 0x90, 0xE0],
+            14 : [0xF0, 0x80, 0xF0, 0x80, 0xF0],
+            15 : [0xF0, 0x80, 0xF0, 0x80, 0x80]
+            }
+
+        i = 0
+        for font in fontSet.values():
+            for byte in font:
+                self.memory[i] = byte
+                i += 1
+
+
+        
 
     def loadROM(self, file, offset):
         data = open(file, 'rb').read()
@@ -110,13 +137,11 @@ class chip8_CPU:
         self.pc += 2
 
     def decode(self):
-        # 0x[msd][x][y][lsd]
-
+        # Parsing opcode in format 0x[msd][x][y][lsd]
         msd = self.op >> 12
         x = (self.op & 0x0F00) >> 8
         y = (self.op & 0x00F0) >> 4
         lsd = self.op & 0x000F
-
         kk = self.op & 0x00FF
         nnn = self.op & 0x0FFF
 
@@ -161,10 +186,11 @@ class chip8_CPU:
 
         if (msd == 0x7):
             # 7xkk - ADD vx, byte. Set Vx = Vx + kk
-            self.v[x] = self.v[x] + kk
+            self.v[x] += kk
 
             if (self.v[x] > 255):
                 self.v[x] -= 256
+                self.v[0xF] = 1
 
         if (msd == 0x8):
             if (lsd == 0x0):
@@ -185,29 +211,32 @@ class chip8_CPU:
 
             if (lsd == 0x4):
                 # 8xy4 - ADD Vx, Vy. Set Vx = Vx + Vy, set Vf = carry
-                val = self.v[x] + self.v[y]
+                self.v[x] += self.v[y]
 
-                if (val > 255):
-                    val = val - 256
+                if (self.v[x] > 255):
+                    self.v[x] -= 256
                     self.v[0xF] = 1
-
-                self.v[x] = val
 
             if (lsd == 0x5):
                 # 8xy5 - SUB Vx, Vy. Set Vx = Vx - Vy, set Vf = NOT borrow
-                val = self.v[x] - self.v[y]
-                self.v[0xF] = 0x1
+                self.v[x] -= self.v[y]
+                self.v[0xF] = 1
 
-                if (val < 0):
-                    val = val + 256
+                if (self.v[x] < 0):
+                    self.v[x] += 256
                     self.v[0xF] = 0
-
-                self.v[x] = val
 
             if (lsd == 0x6):
                 # 8xy6 - SHR Vx {, Vy}. Set Vx = Vx SHR 1. If lsb of Vx is 1, then Vf = 1, else Vf = 0. Then Vx = Vx \ 2
+                #print("SHR")
+                #print("Before: ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
                 self.v[0xF] = self.v[x] & 0x1
                 self.v[x] = self.v[x] >> 1
+                #print("After:  ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
+
+                # leastBit = int(bin(self.v[x])[-1])
+                # self.v[x] = self.v[x] >> 1
+                # self.v[0xF] = leastBit
 
             if (lsd == 0x7):
                 # 8xy7 - SUBN Vx, Vy. Set Vx = Vy - Vx, set Vf = NOT borrow
@@ -222,8 +251,15 @@ class chip8_CPU:
 
             if (lsd == 0xE):
                 # 8xyE - SHL Vx {, Vy}. Set Vx = Vx SHL 1. If msb of Vx is 1, then Vf = 1, else 0. Then Vx = Vx * 2
+                #print("SHL")
+                #print("Before: ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
                 self.v[0xF] = self.v[x] & 0x80
                 self.v[x] = (self.v[x] << 1) & 0xFF
+                #print("After:  ", "v[F]: ", self.v[0xF], "v[x]: ", bin(self.v[x]))
+
+                # mostBit = int(bin(self.v[x])[2])
+                # self.v[x] = self.v[x] << 1
+                # self.v[0xF] = mostBit
 
         if (msd == 0x9):
             # 9xy0 - SNE Vx, Vy. Skip next instruction if Vx != Vy (increase PC by 2)
@@ -240,7 +276,7 @@ class chip8_CPU:
 
         if (msd == 0xC):
             # Cxkk - RND Vx, byte. Set Vx = random byte [0, 255] AND kk
-            self.v[x] = random.randint(0, 255) & kk
+            self.v[x] = randint(0, 255) & kk
 
         if (msd == 0xD):
             # Dxyn - DRW Vx, Vy, nibble. Display n-byte sprite starting at mem location IR at (Vx, Vy), set Vf = collision
@@ -306,7 +342,7 @@ class chip8_CPU:
 
             if (y == 0x2):
                 # Fx29 - LD F, Vx. Set IR = location of spite for digit Vx
-                pass
+                    self.ir = self.v[x] * 5
 
             if (y == 0x3):
                 # Fx33 - LD B, Vx. Store BCD represention of Vx in mem location IR, IR+1, and I+2
@@ -330,7 +366,7 @@ class chip8_CPU:
                 # Fx65 - LD Vx, [I]. Read registers V0 to Vx from mem location starting at IR
                 for i in range(x + 1):
                     self.v[i] = self.memory[self.ir + i]
-
+        
     def decrementTimers(self):
         self.delayTimer -= 1
         self.soundTimer -= 1
@@ -344,4 +380,5 @@ class chip8_CPU:
         self.eventHandler()
         self.fetch()
         self.decode()
+        #self.screen.update()
         self.decrementTimers()
