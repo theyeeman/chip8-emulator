@@ -23,10 +23,5 @@
     - update screen
     
 **Todo**
-- get graphics working
-    - graphics work but refresh rate is really slow
-    - maybe instead of using graphics library, just print a string or list to console?
-        - this might have the issue of the graphics scrolling
-    - look into pygame and frame buffers
-    - try changing keypress to use pygame library
+- screen rollover
     

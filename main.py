@@ -60,6 +60,9 @@ if (__name__ == "__main__"):
         
     # myScreen.update()
 
+    #cpu.loadROM("IBM.ch8", 0x200)
+    #cpu.loadROM("Airplane.ch8", 0x200)
+    #cpu.loadROM("test_opcode.ch8", 0x200)
 
     while running:
 
@@ -68,20 +71,12 @@ if (__name__ == "__main__"):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
-        # keyPress = cpu.getKeyPress(False)
 
-        # if (keyPress != -1):
-        #     num = fontSet[keyPress]
+        cpu.runOneCycle()
+        cpu.screen.update()
+        #print("op: ", hex(cpu.op), "pc: ", hex(cpu.pc))
 
-        #     myScreen.clearScreen()
-
-        #     myScreen.byteToSprite(1, 1, num)
-
-        #     myScreen.update()
-
-        
-        clock.tick(30)
+        clock.tick(60)
     
     pygame.quit()
         

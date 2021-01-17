@@ -23,7 +23,7 @@ from pygame.locals import (
 class chip8_CPU:
     def __init__(self, screen):
         self.screen = screen
-        self.pc = 0  # Program counter
+        self.pc = 0x200  # Program counter
         self.ir = 0  # Index Register
         self.v = [0] * 16  # CPU Registers
         self.op = 0x0  # Current Opcode
@@ -89,7 +89,8 @@ class chip8_CPU:
             return False, -1
 
     def fetch(self):
-        self.op = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
+        self.op = 0x0
+        self.op = (self.memory[self.pc] << 8) | self.memory[self.pc + 1]
         self.pc += 2
 
     def decode(self):
@@ -110,7 +111,8 @@ class chip8_CPU:
 
             else:
                 # 00EE - RET. Return from subroutine. Set PC to top of stack, then decrement SP
-                pass
+                self.pc = self.stack.pop()
+                self.sp -= 1
 
         if (msd == 0x1):
             # 1nnn - JP addr. Set PC to nnn
@@ -118,9 +120,9 @@ class chip8_CPU:
 
         if (msd == 0x2):
             # 2nnn - CALL addr. Increment SP, push current PC to stack, then set PC to nnn
-            self.sp += 1
-            self.stack.insert(0, self.pc)
+            self.stack.append(self.pc)
             self.pc = nnn
+            self.sp += 1
 
         if (msd == 0x3):
             # 3xkk - SE Vx, byte. Skip next instruction if Vx == kk (increase PC by 2)
@@ -145,6 +147,9 @@ class chip8_CPU:
             # 7xkk - ADD vx, byte. Set Vx = Vx + kk
             self.v[x] = self.v[x] + kk
 
+            if (self.v[x] > 255):
+                self.v[x] -= 256
+
         if (msd == 0x8):
             if (lsd == 0x0):
                 # 8xy0 - LD Vx, Vy. Set Vx = Vy
@@ -166,9 +171,9 @@ class chip8_CPU:
                 # 8xy4 - ADD Vx, Vy. Set Vx = Vx + Vy, set Vf = carry
                 val = self.v[x] + self.v[y]
 
-                if (val > 0xFFFF):
-                    val = val - 0xFF
-                    self.v[0xF] = 0x1
+                if (val > 255):
+                    val = val - 256
+                    self.v[0xF] = 1
 
                 self.v[x] = val
 
@@ -177,16 +182,18 @@ class chip8_CPU:
                 val = self.v[x] - self.v[y]
                 self.v[0xF] = 0x1
 
-                if (val < 0x0):
-                    val = val + 0xFF
-                    self.v[0xF] = 0x0
+                if (val < 0):
+                    val = val + 256
+                    self.v[0xF] = 0
 
                 self.v[x] = val
 
             if (lsd == 0x6):
                 # 8xy6 - SHR Vx {, Vy}. Set Vx = Vx SHR 1. If lsb of Vx is 1, then Vf = 1, else Vf = 0. Then Vx = Vx \ 2
                 self.v[0xF] = self.v[x] & 0x1
-                self.v[x] = self.v[x] > 1
+                #print("before SHR: ", bin(self.v[x]))
+                self.v[x] = self.v[x] >> 1
+                #print("after SHR: ", bin(self.v[x]))
 
             if (lsd == 0x7):
                 # 8xy7 - SUBN Vx, Vy. Set Vx = Vy - Vx, set Vf = NOT borrow
@@ -202,7 +209,7 @@ class chip8_CPU:
             if (lsd == 0xE):
                 # 8xyE - SHL Vx {, Vy}. Set Vx = Vx SHL 1. If msb of Vx is 1, then Vf = 1, else 0. Then Vx = Vx * 2
                 self.v[0xF] = self.v[x] & 0x80
-                self.v[x] = (self.v[x] < 1) & 0xFF
+                self.v[x] = (self.v[x] << 1) & 0xFF
 
         if (msd == 0x9):
             # 9xy0 - SNE Vx, Vy. Skip next instruction if Vx != Vy (increase PC by 2)
@@ -280,15 +287,18 @@ class chip8_CPU:
             if (y == 0x3):
                 # Fx33 - LD B, Vx. Store BCD represention of Vx in mem location IR, IR+1, and I+2
                 num = self.v[x]
+                print("num", num)
                 hundredsDigit = num // 100
                 num = num % 100
                 tensDigit = num // 10
                 num = num % 10
                 onesDigit = num
 
-                self.memory[self.ir] = format(hundredsDigit, 'x')
-                self.memory[self.ir + 1] = format(tensDigit, 'x')
-                self.memory[self.ir + 2] = format(onesDigit, 'x')
+                self.memory[self.ir] = hundredsDigit
+                self.memory[self.ir + 1] = tensDigit
+                self.memory[self.ir + 2] = onesDigit
+
+                print(self.memory[self.ir], self.memory[self.ir + 1], self.memory[self.ir + 2])
 
             if (y == 0x5):
                 # Fx55 - LD [I], Vx. Store registers V0 to Vx in mem location starting at IR
@@ -300,17 +310,17 @@ class chip8_CPU:
                 for i in range(x + 1):
                     self.v[i] = self.memory[self.ir + i]
 
-    def updateTimers(self, cycleTime):
-        self.delayTimer = self.delayTimer - cycleTime
-        self.soundTimer = self.soundTimer - cycleTime
+    def decrementTimers(self):
+        self.delayTimer -= 1
+        self.soundTimer -=1
         
         if (self.delayTimer < 0):
             self.delayTimer = 0
         if (self.soundTimer < 0):
             self.soundTimer = 0
 
-    def runOneCycle(self, cycleTime):
+    def runOneCycle(self):
         self.keyPressed = self.getKeyPress(False)
         self.fetch()
         self.decode()
-        self.updateTimers(cycleTime)
+        self.decrementTimers()
