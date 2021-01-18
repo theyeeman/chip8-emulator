@@ -1,5 +1,5 @@
 from screen import chip8_Screen
-from chip8 import *
+from chip8 import chip8_Emulator
 import pygame
 
 if (__name__ == "__main__"):
