@@ -289,7 +289,7 @@ class chip8_Emulator:
 
                 if (lsd == 0xA):
                     # Fx0A - LD Vx, key. Store value of key press in Vx. All exeution is stopped until key is pressed.
-                    while (self.keyPressed == -1):
+                    while (self.keyPressed == -1 and self.running):
                         self.eventHandler()
 
                     self.v[x] = self.keyPressed
