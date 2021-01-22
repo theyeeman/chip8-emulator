@@ -1,4 +1,4 @@
-import pygame import Color, display, draw
+from pygame import Color, display, draw
 
 pixelOff = Color(0, 0, 0, 255)
 pixelOn = Color(255, 255, 255, 255)
