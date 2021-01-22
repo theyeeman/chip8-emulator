@@ -9,7 +9,7 @@ if (__name__ == "__main__"):
     cpu = chip8_Emulator(myScreen)
 
     # Load ROM here
-    cpu.loadROM("ROM_Name.ch8", 0x200)
+    cpu.loadROM("ROM_Name.ch8", cpu.programMemoryStartAddress)
 
     while (cpu.running):
 
@@ -18,6 +18,6 @@ if (__name__ == "__main__"):
         cpu.runOneCycle()
         cpu.screen.update()
 
-        clock.tick(60)
+        clock.tick(cpu.speed)
     
     pygame.quit()

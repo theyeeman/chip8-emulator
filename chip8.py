@@ -25,12 +25,14 @@ from pygame.locals import (
 
 class chip8_Emulator:
     def __init__(self, screen):
+        pygame.init()
         self.screen = screen
         self.pc = 0x200  # Program counter
         self.ir = 0  # Index Register
         self.v = [0] * 16  # CPU Registers
         self.op = 0x0  # Current Opcode
         self.sp = 0  # Stack pointer
+        self.programMemoryStartAddress = 0x200
         self.keyPressed = -1
         self.memory = [0] * 4096
         self.stack = [0] * 16
@@ -39,6 +41,7 @@ class chip8_Emulator:
         self.running = True
         self.beepFreq = 2500
         self.beepDuration = 1000
+        self.speed = 300
 
         fontSet = {
             0: [0xF0, 0x90, 0x90, 0x90, 0xF0],
@@ -65,6 +68,10 @@ class chip8_Emulator:
             for byte in font:
                 self.memory[i] = byte
                 i += 1
+        
+        # Create pygame event for timer handling
+        self.DECREMENT_TIMER = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.DECREMENT_TIMER, 17)
 
     def loadROM(self, file, offset):
         data = open(file, 'rb').read()
@@ -79,8 +86,11 @@ class chip8_Emulator:
             if (event.type == pygame.QUIT):
                 self.running = False
 
-            if (event.type == KEYDOWN):
+            elif (event.type == KEYDOWN):
                 self.keyPressed = self.keyMap(event.key)
+
+            elif (event.type == self.DECREMENT_TIMER):
+                self.decrementTimers()
 
         if (self.soundTimer > 0):
             winsound.Beep(self.beepFreq, self.beepDuration)
@@ -332,4 +342,3 @@ class chip8_Emulator:
         self.eventHandler()
         self.fetchOpcode()
         self.executeOpcode()
-        self.decrementTimers()
