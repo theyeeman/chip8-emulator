@@ -328,6 +328,9 @@ class chip8_Emulator:
                 # Fx65 - LD Vx, [I]. Read registers V0 to Vx from mem location starting at IR
                 for i in range(x + 1):
                     self.v[i] = self.memory[self.ir + i]
+            else:
+                print("Invalid opcode! Exiting...")
+                self.running = False
         
     def decrementTimers(self):
         self.delayTimer -= 1
