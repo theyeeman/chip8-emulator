@@ -1,15 +1,19 @@
 from screen import chip8_Screen
 from chip8 import chip8_Emulator
 import pygame
+import easygui
 
 if (__name__ == "__main__"):
-    # Initalize all required variables
+    # Open up file selection window to select ROM
+    filePath = easygui.fileopenbox()
+    
+    # Initalize emulator
     myScreen = chip8_Screen(10)
     myScreen.initDisplay()
     cpu = chip8_Emulator(myScreen)
 
     # Load ROM here
-    cpu.loadROM("ROM_Name.ch8", cpu.programMemoryStartAddress)
+    cpu.loadROM(filePath, cpu.programMemoryStartAddress)
 
     while (cpu.running):
 
