@@ -24,7 +24,7 @@ from pygame.locals import (
 )
 
 class chip8_Emulator:
-    def __init__(self, screen):
+    def __init__(self, screen, speed):
         pygame.init()
         self.screen = screen
         self.pc = 0x200  # Program counter
@@ -41,7 +41,7 @@ class chip8_Emulator:
         self.running = True
         self.beepFreq = 2500
         self.beepDuration = 1000
-        self.speed = 300
+        self.speed = speed
 
         fontSet = {
             0: [0xF0, 0x90, 0x90, 0x90, 0xF0],
