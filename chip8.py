@@ -1,4 +1,5 @@
-# Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+# CPU Emulator class. Handles initialization, CPU loop operation, and execution 
+# of opcodes. Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 from random import randint
 import pygame
 import winsound
@@ -345,3 +346,4 @@ class chip8_Emulator:
         self.eventHandler()
         self.fetchOpcode()
         self.executeOpcode()
+        self.screen.update()

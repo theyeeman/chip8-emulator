@@ -1,3 +1,4 @@
+# Screen class to handle initialization, drawing, and updating.
 from pygame import Color, display, draw
 
 pixelOff = Color(0, 0, 0, 255)
@@ -68,28 +69,6 @@ class chip8_Screen:
                     # Pixel is already on, so turn this pixel off and set v[0xF]
                     self.resetPixel((x + 7 - i) % 64, y % 32)
                     setVF = True
-        
-        return setVF
-
-    def byteToSprite(self, x, y, byteList) -> bool:
-        # Each byte is 8-bits
-        # Return whether a pixel was turned off
-
-        setVF = False
-
-        for j in range(len(byteList)):
-            byte = byteList[j]
-            for i in range(7, -1, -1):
-                mask = 1
-                if (byte & (mask << i) != 0):
-                    # Pixel at (x, y) commanded on
-                    if (not self.getPixel(x + 7 - i, y + j)):
-                        # Pixel is off, so turn on this pixel
-                        self.setPixel(x + 7 - i, y + j)
-                    else:
-                        # Pixel is already on, so turn this pixel off and set v[0xF]
-                        self.resetPixel(x + 7 - i, y + j)
-                        setVF = True
         
         return setVF
 
