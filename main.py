@@ -6,12 +6,15 @@ import config
 
 if (__name__ == "__main__"):
     
-    filePath, userClockSpeed, userScreenScale = config.getEmulatorVariables()
-    
+    #filePath, userClockSpeed, userScreenScale = config.getEmulatorVariables()
+    filePath = "C:\\repos\\chip8-emulator\\ROMs\\keypad_test.ch8"
+    userClockSpeed = 30
+    userScreenScale = 10
+
     # Initalize emulator
-    myScreen = chip8_Screen(userScreenScale)
-    myScreen.initDisplay()
-    cpu = chip8_Emulator(myScreen, userClockSpeed)
+    screen = chip8_Screen(userScreenScale)
+    screen.initDisplay()
+    cpu = chip8_Emulator(screen, userClockSpeed)
 
     cpu.loadROM(filePath, cpu.programMemoryStartAddress)
 
@@ -20,6 +23,7 @@ if (__name__ == "__main__"):
         clock = pygame.time.Clock()
 
         cpu.runOneCycle()
+        print('op: ', hex(cpu.op), 'pc: ', hex(cpu.pc))
 
         clock.tick(cpu.speed)
     

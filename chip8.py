@@ -3,6 +3,7 @@
 from random import randint
 import pygame
 import winsound
+import save
 from pygame.locals import (
     K_1,
     K_2,
@@ -20,11 +21,14 @@ from pygame.locals import (
     K_x,
     K_c,
     K_v,
+    K_F11,
+    K_F12,
     KEYDOWN,
     KEYUP,
 )
 
 class chip8_Emulator:
+
     def __init__(self, screen, speed):
         pygame.init()
         self.screen = screen
@@ -41,8 +45,9 @@ class chip8_Emulator:
         self.soundTimer = 0
         self.running = True
         self.beepFreq = 2500
-        self.beepDuration = 1000
+        self.beepDuration = 10
         self.speed = speed
+        self.saveState = save.chip8_saveState()
 
         fontSet = {
             0: [0xF0, 0x90, 0x90, 0x90, 0xF0],
@@ -80,7 +85,8 @@ class chip8_Emulator:
             self.memory[index + offset] = byte
 
     def eventHandler(self):
-        # Handles events for closing pygame window, keypresses, and sound timer beep
+        # Handles events for closing pygame window, keypresses, sound timer beep,
+        # and save state.
         self.keyPressed = -1
 
         for event in pygame.event.get():
@@ -88,7 +94,20 @@ class chip8_Emulator:
                 self.running = False
 
             elif (event.type == KEYDOWN):
-                self.keyPressed = self.keyMap(event.key)
+                if (event.key == K_F11):
+                    print("Saving current state")
+                    self.saveState.saveSaveState(self)
+
+                elif (event.key == K_F12):
+                    if (self.saveState.isSaveStateValid()):
+                        print("Loading save state")
+                        self.op = 0
+                        self.saveState.loadSaveState(self)
+
+                    else:
+                        print("No valid save state!")
+                else:
+                    self.keyPressed = self.keyMap(event.key)
 
             elif (event.type == self.DECREMENT_TIMER):
                 self.decrementTimers()
@@ -330,8 +349,8 @@ class chip8_Emulator:
                 for i in range(x + 1):
                     self.v[i] = self.memory[self.ir + i]
             else:
-                print("Invalid opcode! Exiting...")
-                self.running = False
+                print("Invalid opcode", hex(self.op), ". Exiting...")
+                #self.running = False
         
     def decrementTimers(self):
         self.delayTimer -= 1
@@ -343,7 +362,11 @@ class chip8_Emulator:
             self.soundTimer = 0
 
     def runOneCycle(self):
-        self.eventHandler()
+        print("fetch opcode")
         self.fetchOpcode()
+        print("execute opcode")
         self.executeOpcode()
+        print("screen update")
         self.screen.update()
+        print("event handler")
+        self.eventHandler()

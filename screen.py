@@ -11,7 +11,8 @@ class chip8_Screen:
         self.width = 64 * scale
         self.height = 32 * scale
         self.scale = scale
-    
+        self.pixelMap = []
+
     def initDisplay(self):
         display.init()
         self.surface = display.set_mode([self.width, self.height])
@@ -33,7 +34,7 @@ class chip8_Screen:
         draw.rect(self.surface, pixelOn, (x_pos, y_pos, self.scale, self.scale))
 
     def resetPixel(self, x, y):
-        # Set a pixel in the buffer to be off at a specific x, y location. Need to call udpate()
+        # Set a pixel in the buffer to be off at a specific x, y location. Need to call update()
         # to actually make it show on screen
 
         x_pos = x * self.scale
@@ -42,6 +43,8 @@ class chip8_Screen:
         draw.rect(self.surface, pixelOff, (x_pos, y_pos, self.scale, self.scale))
 
     def getPixel(self, x, y):
+        # Return true if pixel at position (x, y) is on
+
         x_pos = x * self.scale
         y_pos = y * self.scale
 
@@ -51,8 +54,23 @@ class chip8_Screen:
             return False
         else:
             return True
+    
+    def getPixelMap(self):
+        # Store the current screen of pixels in a 2D array. Used for save state
+        
+        self.pixelMap.clear()
+        tempMap = []
 
-    def byteToPixel(self, x, y, byte) -> bool:
+        for y in range(32):
+            for x in range(64):
+                if (self.getPixel(x, y)):
+                    tempMap.append(1)
+                else:
+                    tempMap.append(0)
+            self.pixelMap.append(tempMap.copy())
+            tempMap.clear()
+
+    def byteToPixel(self, x, y, byte):
         # byte is 8-bits
         # Return whether pixel was turned off
 
@@ -81,16 +99,10 @@ class chip8_Screen:
     def getScale(self):
         return self.scale
 
-    @staticmethod
-    def update():
-        # Update the screen with the buffer. Static method because we don't
-        # care about implicitly passing arguments to this (we just want to call
-        # it whenever we need to).
-
+    def update(self):
+        # Update the screen with the buffer.
         display.flip()
 
-    @staticmethod
-    def destroy():
+    def destroy(self):
         # Destroy the current screen
-
         display.quit()
