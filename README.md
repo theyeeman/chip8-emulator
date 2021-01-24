@@ -5,7 +5,7 @@ A CHIP-8 CPU emulator with additional features.
 * GUI for ROM selection
 * Adjustable clock speed
 * Adjustable screen scale
-* Single save state
+* Single save state (F11 to save, F12 to load)
 
 # Packages Used
 * pygame
