@@ -351,14 +351,9 @@ class chip8_Emulator:
                 print("Invalid opcode", hex(self.op), ". Exiting...")
                 self.running = False
         
-    def decrementTimers(self):
-        self.delayTimer -= 1
-        self.soundTimer -= 1
-        
-        if (self.delayTimer < 0):
-            self.delayTimer = 0
-        if (self.soundTimer < 0):
-            self.soundTimer = 0
+    def decrementTimers(self):        
+        self.delayTimer = max(self.delayTimer - 1, 0)
+        self.soundTimer = max(self.soundTimer - 1, 0)
 
     def runOneCycle(self):
         self.eventHandler()
