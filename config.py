@@ -13,7 +13,7 @@ def getEmulatorVariables():
     fieldValues = easygui.multenterbox(msg, title, fieldNames)
 
     while (True):
-        if (fieldValues == None):
+        if (fieldValues is None):
             break
         
         errmsg = ""
