@@ -30,7 +30,7 @@ class chip8_saveState():
         self.programMemoryStartAddress = cpu.programMemoryStartAddress
         self.keyPressed = cpu.keyPressed
         self.memory = cpu.memory.copy()
-        self.stack = cpu.memory.copy()
+        self.stack = cpu.stack.copy()
         self.delayTimer = cpu.delayTimer
         self.soundTimer = cpu.soundTimer
         self.running = cpu.running
