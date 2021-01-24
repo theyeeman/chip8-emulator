@@ -35,3 +35,7 @@ The CHIP-8 uses a hexadecimal keyboard for input. The mapping is shown in the fo
 | `D`        | `r`          |
 | `E`        | `f`          |
 | `F`        | `v`          |
+
+# Credits
+
+* http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
