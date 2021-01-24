@@ -21,13 +21,11 @@ class chip8_Screen:
 
     def clearScreen(self):
         # Set all pixels on screen to off
-
         self.surface.fill(pixelOff)
 
     def setPixel(self, x, y):
         # Set a pixel in the buffer to be on at a specific x, y location. Need to call update()
         # to actually make it show on screen
-
         x_pos = x * self.scale
         y_pos = y * self.scale
 
@@ -36,7 +34,6 @@ class chip8_Screen:
     def resetPixel(self, x, y):
         # Set a pixel in the buffer to be off at a specific x, y location. Need to call update()
         # to actually make it show on screen
-
         x_pos = x * self.scale
         y_pos = y * self.scale
 
@@ -44,7 +41,6 @@ class chip8_Screen:
 
     def getPixel(self, x, y):
         # Return true if pixel at position (x, y) is on
-
         x_pos = x * self.scale
         y_pos = y * self.scale
 
@@ -57,7 +53,6 @@ class chip8_Screen:
     
     def getPixelMap(self):
         # Store the current screen of pixels in a 2D array. Used for save state
-        
         self.pixelMap.clear()
         tempMap = []
 
@@ -71,9 +66,7 @@ class chip8_Screen:
             tempMap.clear()
 
     def byteToPixel(self, x, y, byte):
-        # byte is 8-bits
-        # Return whether pixel was turned off
-
+        # Byte is 8-bits. Return whether pixel was turned off
         setVF = False
 
         for i in range(7, -1, -1):

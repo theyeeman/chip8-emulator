@@ -1,4 +1,4 @@
-# Save state handling.
+# Save state handling
 
 class chip8_saveState():
     def __init__(self):
@@ -42,7 +42,6 @@ class chip8_saveState():
         self.screen = cpu.screen.pixelMap
 
     def loadSaveState(self, cpu):
-        print("opcode in saved state: ", hex(self.op))
         if (self.saveStateValid):
             cpu.pc = self.pc # Program counter
             cpu.ir = self.ir # Index Register

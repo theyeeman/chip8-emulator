@@ -101,7 +101,6 @@ class chip8_Emulator:
                 elif (event.key == K_F12):
                     if (self.saveState.isSaveStateValid()):
                         print("Loading save state")
-                        self.op = 0
                         self.saveState.loadSaveState(self)
 
                     else:
@@ -350,7 +349,7 @@ class chip8_Emulator:
                     self.v[i] = self.memory[self.ir + i]
             else:
                 print("Invalid opcode", hex(self.op), ". Exiting...")
-                #self.running = False
+                self.running = False
         
     def decrementTimers(self):
         self.delayTimer -= 1
@@ -362,11 +361,7 @@ class chip8_Emulator:
             self.soundTimer = 0
 
     def runOneCycle(self):
-        print("fetch opcode")
-        self.fetchOpcode()
-        print("execute opcode")
-        self.executeOpcode()
-        print("screen update")
-        self.screen.update()
-        print("event handler")
         self.eventHandler()
+        self.fetchOpcode()
+        self.executeOpcode()
+        self.screen.update()
