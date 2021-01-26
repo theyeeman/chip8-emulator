@@ -96,9 +96,8 @@ class Chip8Emulator:
 
     def eventHandler(self):
         """Handles events for closing pygame window, keypresses, sound timer 
-        beep, and save state. keyPressed value of -1 means no key pressed.
+        beep, and save state. keyPressed value of -1 means invalid key.
         """
-        self.keyPressed = -1
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -118,6 +117,10 @@ class Chip8Emulator:
 
                 else:
                     self.keyPressed = self.keyMap(event.key)
+
+            elif (event.type == KEYUP):
+                if (self.keyPressed == self.keyMap(event.key)):
+                    self.keyPressed = -1
 
             elif (event.type == self.DECREMENT_TIMER):
                 self.decrementTimers()
