@@ -1,7 +1,11 @@
-# Save state handling
+"""Class for handling save state."""
 
-class chip8_saveState():
+class Chip8SaveState():
     def __init__(self):
+        """Initialize a save state instance. The class variables are nearly the 
+        same as the main emulator class, however this class also keeps track
+        of the screen.
+        """
         self.saveStateValid = False
         self.pc = 0  # Program counter
         self.ir = 0  # Index Register
@@ -21,6 +25,9 @@ class chip8_saveState():
         self.screen = []
         
     def saveSaveState(self, cpu):
+        """Save a copy of the current emulator object and save the current
+        screen drawing.
+        """
         self.saveStateValid = True
         self.pc = cpu.pc  # Program counter
         self.ir = cpu.ir  # Index Register
@@ -42,6 +49,10 @@ class chip8_saveState():
         self.screen = cpu.screen.pixelMap
 
     def loadSaveState(self, cpu):
+        """Load the saved copy of the emulator object back into the emulator. 
+        If there is currently no state saved, then calling this function does
+        nothing.
+        """
         if (self.saveStateValid):
             cpu.pc = self.pc # Program counter
             cpu.ir = self.ir # Index Register
@@ -61,9 +72,11 @@ class chip8_saveState():
             self.drawSaveScreen(cpu)
 
     def isSaveStateValid(self):
+        """Returns if there is a stored save state."""
         return self.saveStateValid
 
     def drawSaveScreen(self, cpu):
+        """Draw the saved screen."""
         cpu.screen.clearScreen()
 
         for y in range(32):

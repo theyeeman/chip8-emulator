@@ -1,17 +1,18 @@
-# Main program
-from screen import chip8_Screen
-from chip8 import chip8_Emulator
+"""Main program."""
+
 import pygame
 import config
+from screen import Chip8Screen
+from chip8 import Chip8Emulator
 
 if (__name__ == "__main__"):
     
     filePath, userClockSpeed, userScreenScale = config.getEmulatorVariables()
 
     # Initalize emulator
-    screen = chip8_Screen(userScreenScale)
+    screen = Chip8Screen(userScreenScale)
     screen.initDisplay()
-    cpu = chip8_Emulator(screen, userClockSpeed)
+    cpu = Chip8Emulator(screen, userClockSpeed)
 
     cpu.loadROM(filePath, cpu.programMemoryStartAddress)
 

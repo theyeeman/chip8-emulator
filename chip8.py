@@ -1,8 +1,12 @@
-# CPU Emulator class. Handles initialization, CPU loop operation, and execution 
-# of opcodes. Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+""" CPU Emulator class. Handles initialization, CPU loop operation, and 
+execution of opcodes.
+
+Opcode information from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+"""
+
 from random import randint
-import pygame
 import winsound
+import pygame
 import save
 from pygame.locals import (
     K_1,
@@ -27,9 +31,12 @@ from pygame.locals import (
     KEYUP,
 )
 
-class chip8_Emulator:
+class Chip8Emulator:
 
     def __init__(self, screen, speed):
+        """Initialize instance of CPU object. Set up all CPU registers, memory,
+        CPU variables, and load fontset into memory.
+        """
         pygame.init()
         self.screen = screen
         self.pc = 0x200  # Program counter
@@ -47,7 +54,7 @@ class chip8_Emulator:
         self.beepFreq = 2500
         self.beepDuration = 10
         self.speed = speed
-        self.saveState = save.chip8_saveState()
+        self.saveState = save.Chip8SaveState()
 
         fontSet = {
             0: [0xF0, 0x90, 0x90, 0x90, 0xF0],
@@ -80,13 +87,17 @@ class chip8_Emulator:
         pygame.time.set_timer(self.DECREMENT_TIMER, 17)
 
     def loadROM(self, file, offset):
+        """Load the selected ROM into memory at the specified memory offset.
+        The CHIP8 CPU loads program memory starting at address 0x200.
+        """
         data = open(file, 'rb').read()
         for index, byte in enumerate(data):
             self.memory[index + offset] = byte
 
     def eventHandler(self):
-        # Handles events for closing pygame window, keypresses, sound timer beep,
-        # and save state.
+        """Handles events for closing pygame window, keypresses, sound timer 
+        beep, and save state. keyPressed value of -1 means no key pressed.
+        """
         self.keyPressed = -1
 
         for event in pygame.event.get():
@@ -102,9 +113,9 @@ class chip8_Emulator:
                     if (self.saveState.isSaveStateValid()):
                         print("Loading save state")
                         self.saveState.loadSaveState(self)
-
                     else:
                         print("No valid save state!")
+
                 else:
                     self.keyPressed = self.keyMap(event.key)
 
@@ -115,8 +126,9 @@ class chip8_Emulator:
             winsound.Beep(self.beepFreq, self.beepDuration)
 
     def keyMap(self, keys):
-        # Converts valid key press into hex value. Invalid key press
-        # is treated as no key pressed and has value -1
+        """ Converts valid key press into hex value. Invalid key press is 
+        treated as no key pressed and has value -1.
+        """
         switcher = {
             K_x: 0x0,
             K_1: 0x1,
@@ -138,12 +150,20 @@ class chip8_Emulator:
         return switcher.get(keys, -1)
 
     def fetchOpcode(self):
+        """Get opcode from memory at the location stored in the program counter.
+        Need to read in 2 bytes from memory since each memory register holds 
+        only 2 bytes and an opcode is 4 bytes in length. Increment the program 
+        counter after reading in opcode.
+        """
         self.op = 0x0
         self.op = (self.memory[self.pc] << 8) | self.memory[self.pc + 1]
         self.pc += 2
 
     def executeOpcode(self):
-        # Parsing opcode into format 0x[msd][x][y][lsd]
+        """Parse the opcode into variables. The format is 0x[msd][x][y][lsd]. 
+        kk is the 2 smallest bytes and nnn is the 3 smallest bytes. An invalid 
+        opcode will cause the program to quit.
+        """
         msd = self.op >> 12
         x = (self.op & 0x0F00) >> 8
         y = (self.op & 0x00F0) >> 4
@@ -157,7 +177,8 @@ class chip8_Emulator:
                 self.screen.clearScreen()
 
             else:
-                # 00EE - RET. Return from subroutine. Set PC to top of stack, then decrement SP
+                # 00EE - RET. Return from subroutine. Set PC to top of stack, 
+                # then decrement SP
                 self.pc = self.stack.pop()
                 self.sp -= 1
 
@@ -166,23 +187,27 @@ class chip8_Emulator:
             self.pc = nnn
 
         elif (msd == 0x2):
-            # 2nnn - CALL addr. Increment SP, push current PC to stack, then set PC to nnn
+            # 2nnn - CALL addr. Increment SP, push current PC to stack, then 
+            # set PC to nnn
             self.stack.append(self.pc)
             self.pc = nnn
             self.sp += 1
 
         elif (msd == 0x3):
-            # 3xkk - SE Vx, byte. Skip next instruction if Vx == kk (increase PC by 2)
+            # 3xkk - SE Vx, byte. Skip next instruction if Vx == kk 
+            # (increase PC by 2)
             if (self.v[x] == kk):
                 self.pc += 2
 
         elif (msd == 0x4):
-            # 4xkk - SNE Vx, byte. Skip next instruction if Vx != kk (increase PC by 2)
+            # 4xkk - SNE Vx, byte. Skip next instruction if Vx != kk 
+            # (increase PC by 2)
             if (self.v[x] != kk):
                 self.pc += 2
 
         elif (msd == 0x5):
-            # 5xy0 - SE Vx, Vy. Skip next instruction if Vx == Vy (increase PC by 2)
+            # 5xy0 - SE Vx, Vy. Skip next instruction if Vx == Vy 
+            # (increase PC by 2)
             if (self.v[x] == self.v[y]):
                 self.pc += 2
 
@@ -200,23 +225,23 @@ class chip8_Emulator:
 
         elif (msd == 0x8):
             if (lsd == 0x0):
-                # 8xy0 - LD Vx, Vy. Set Vx = Vy
+                # 8xy0 - LD Vx, Vy. Set Vx = Vy.
                 self.v[x] = self.v[y]
 
             elif (lsd == 0x1):
-                # 8xy1 - OR Vx, Vy. Set Vx = Vx OR Vy
+                # 8xy1 - OR Vx, Vy. Set Vx = Vx OR Vy.
                 self.v[x] = self.v[x] | self.v[y]
 
             elif (lsd == 0x2):
-                # 8xy2 - AND Vx, Vy. Set Vx = Vx AND Vy
+                # 8xy2 - AND Vx, Vy. Set Vx = Vx AND Vy.
                 self.v[x] = self.v[x] & self.v[y]
 
             elif (lsd == 0x3):
-                # 8xy3 - XOR Vx, Vy. Set Vx = Vx XOR Vy
+                # 8xy3 - XOR Vx, Vy. Set Vx = Vx XOR Vy.
                 self.v[x] = self.v[x] ^ self.v[y] 
 
             elif (lsd == 0x4):
-                # 8xy4 - ADD Vx, Vy. Set Vx = Vx + Vy, set Vf = carry
+                # 8xy4 - ADD Vx, Vy. Set Vx = Vx + Vy, set Vf = carry.
                 self.v[x] += self.v[y]
 
                 if (self.v[x] > 255):
@@ -224,7 +249,7 @@ class chip8_Emulator:
                     self.v[0xF] = 1
 
             elif (lsd == 0x5):
-                # 8xy5 - SUB Vx, Vy. Set Vx = Vx - Vy, set Vf = NOT borrow
+                # 8xy5 - SUB Vx, Vy. Set Vx = Vx - Vy, set Vf = NOT borrow.
                 self.v[x] -= self.v[y]
                 self.v[0xF] = 1
 
@@ -233,12 +258,13 @@ class chip8_Emulator:
                     self.v[0xF] = 0
 
             elif (lsd == 0x6):
-                # 8xy6 - SHR Vx {, Vy}. Set Vx = Vx SHR 1. If lsb of Vx is 1, then Vf = 1, else Vf = 0. Then Vx = Vx \ 2
+                # 8xy6 - SHR Vx {, Vy}. Set Vx = Vx SHR 1. If lsb of Vx is 1, 
+                # then Vf = 1, else Vf = 0. Then Vx = Vx \ 2.
                 self.v[0xF] = self.v[x] & 0x1
                 self.v[x] = self.v[x] >> 1
 
             elif (lsd == 0x7):
-                # 8xy7 - SUBN Vx, Vy. Set Vx = Vy - Vx, set Vf = NOT borrow
+                # 8xy7 - SUBN Vx, Vy. Set Vx = Vy - Vx, set Vf = NOT borrow.
                 val = self.v[y] - self.v[x]
                 self.v[0xF] = 0x1
 
@@ -249,35 +275,39 @@ class chip8_Emulator:
                 self.v[x] = val
 
             elif (lsd == 0xE):
-                # 8xyE - SHL Vx {, Vy}. Set Vx = Vx SHL 1. If msb of Vx is 1, then Vf = 1, else 0. Then Vx = Vx * 2
+                # 8xyE - SHL Vx {, Vy}. Set Vx = Vx SHL 1. If msb of Vx is 1, 
+                # then Vf = 1, else 0. Then Vx = Vx * 2.
                 self.v[0xF] = self.v[x] & 0x80
                 self.v[x] = (self.v[x] << 1) & 0xFF
 
         elif (msd == 0x9):
-            # 9xy0 - SNE Vx, Vy. Skip next instruction if Vx != Vy (increase PC by 2)
+            # 9xy0 - SNE Vx, Vy. Skip next instruction if Vx != Vy 
+            # (increase PC by 2).
             if (self.v[x] != self.v[y]):
                 self.pc += 2
 
         elif (msd == 0xA):
-            # Annn - Ld I, addr. Set IR = nnn
+            # Annn - Ld I, addr. Set IR = nnn.
             self.ir = nnn
 
         elif (msd == 0xB):
-            # Bnnn - Jp V0, addr. Set PC = V0 + nnn
+            # Bnnn - Jp V0, addr. Set PC = V0 + nnn.
             self.pc = self.v[0x0] + nnn
 
         elif (msd == 0xC):
-            # Cxkk - RND Vx, byte. Set Vx = random byte [0, 255] AND kk
+            # Cxkk - RND Vx, byte. Set Vx = random byte [0, 255] AND kk.
             self.v[x] = randint(0, 255) & kk
 
         elif (msd == 0xD):
-            # Dxyn - DRW Vx, Vy, nibble. Display n-byte sprite starting at mem location IR at (Vx, Vy), set Vf = collision
+            # Dxyn - DRW Vx, Vy, nibble. Display n-byte sprite starting at mem 
+            # location IR at (Vx, Vy), set Vf = collision.
 
             self.v[0xF] = 0
             pixelCollision = False
 
             for i in range(lsd):
-                pixelCollision = self.screen.byteToPixel(self.v[x], self.v[y] + i, self.memory[self.ir + i])
+                pixelCollision = self.screen.byteToPixel(
+                    self.v[x], self.v[y] + i, self.memory[self.ir + i])
 
             if (pixelCollision):
                 self.v[0xF] = 1
@@ -286,23 +316,26 @@ class chip8_Emulator:
 
         elif (msd == 0xE):
             if (lsd == 0xE):
-                # Ex9E - SKP Vx. If key pressed on keyboard corresponds with value in Vx, increment PC by 2
+                # Ex9E - SKP Vx. If key pressed on keyboard corresponds with 
+                # value in Vx, increment PC by 2.
                 if (self.keyPressed == self.v[x]):
                     self.pc += 2
 
             elif (lsd == 0x1):
-                # ExA1 - SKNP Vx. If key not pressed on keyboard corresponds to value in Vx, increment PC by 2
+                # ExA1 - SKNP Vx. If key not pressed on keyboard corresponds to 
+                # value in Vx, increment PC by 2.
                 if (self.keyPressed != self.v[x]):
                     self.pc += 2
 
         elif (msd == 0xF):
             if (y == 0x0):
                 if (lsd == 0x7):
-                    # Fx07 LD Vx, DT. Set Vx = delay timer value
+                    # Fx07 LD Vx, DT. Set Vx = delay timer value.
                     self.v[x] = self.delayTimer
 
                 if (lsd == 0xA):
-                    # Fx0A - LD Vx, key. Store value of key press in Vx. All exeution is stopped until key is pressed.
+                    # Fx0A - LD Vx, key. Store value of key press in Vx. All 
+                    # exeution is stopped until key is pressed.
                     while (self.keyPressed == -1 and self.running):
                         self.eventHandler()
 
@@ -310,23 +343,24 @@ class chip8_Emulator:
 
             elif (y == 0x1):
                 if (lsd == 0x5):
-                    # Fx15 - LD DT, Vx. Set delay timer = Vx
+                    # Fx15 - LD DT, Vx. Set delay timer = Vx.
                     self.delayTimer = self.v[x]
 
                 if (lsd == 0x8):
-                    # Fx18 - LD ST, Vx. Set sound timer = Vx
+                    # Fx18 - LD ST, Vx. Set sound timer = Vx.
                     self.soundTimer = self.v[x]
 
                 if (lsd == 0xE):
-                    # Fx1E - Add I, Vx. Set IR = IR + Vx
+                    # Fx1E - Add I, Vx. Set IR = IR + Vx.
                     self.ir = self.ir + self.v[x]
 
             elif (y == 0x2):
-                # Fx29 - LD F, Vx. Set IR = location of spite for digit Vx
+                # Fx29 - LD F, Vx. Set IR = location of spite for digit Vx.
                     self.ir = self.v[x] * 5
 
             elif (y == 0x3):
-                # Fx33 - LD B, Vx. Store BCD represention of Vx in mem location IR, IR+1, and I+2
+                # Fx33 - LD B, Vx. Store BCD represention of Vx in mem location 
+                # IR, IR+1, and I+2.
                 num = self.v[x]
                 hundredsDigit = num // 100
                 num = num % 100
@@ -339,23 +373,29 @@ class chip8_Emulator:
                 self.memory[self.ir + 2] = onesDigit
 
             elif (y == 0x5):
-                # Fx55 - LD [I], Vx. Store registers V0 to Vx in mem location starting at IR
+                # Fx55 - LD [I], Vx. Store registers V0 to Vx in mem location 
+                # starting at IR.
                 for i in range(x + 1):
                     self.memory[self.ir + i] = self.v[i]
 
             elif (y == 0x6):
-                # Fx65 - LD Vx, [I]. Read registers V0 to Vx from mem location starting at IR
+                # Fx65 - LD Vx, [I]. Read registers V0 to Vx from mem location 
+                # starting at IR.
                 for i in range(x + 1):
                     self.v[i] = self.memory[self.ir + i]
             else:
                 print("Invalid opcode", hex(self.op), ". Exiting...")
                 self.running = False
         
-    def decrementTimers(self):        
+    def decrementTimers(self):
+        """Decrement the timer values at a rate of 60 Hz."""        
         self.delayTimer = max(self.delayTimer - 1, 0)
         self.soundTimer = max(self.soundTimer - 1, 0)
 
     def runOneCycle(self):
+        """Main execution loop. Calls all the required functions to run the
+        CHIP8 emulator.
+        """
         self.eventHandler()
         self.fetchOpcode()
         self.executeOpcode()
