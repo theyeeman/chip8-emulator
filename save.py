@@ -69,14 +69,14 @@ class Chip8SaveState():
             cpu.beepFreq = self.beepFreq
             cpu.beepDuration = self.beepDuration
             cpu.speed = self.speed
-            self.drawSaveScreen(cpu)
+            self._drawSaveScreen(cpu)
 
     def isSaveStateValid(self):
         """Returns if there is a stored save state."""
         return self.saveStateValid
 
-    def drawSaveScreen(self, cpu):
-        """Draw the saved screen."""
+    def _drawSaveScreen(self, cpu):
+        # Draw the saved screen.
         cpu.screen.clearScreen()
 
         for y in range(32):

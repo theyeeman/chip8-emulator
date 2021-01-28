@@ -94,10 +94,10 @@ class Chip8Emulator:
         for index, byte in enumerate(data):
             self.memory[index + offset] = byte
 
-    def eventHandler(self):
-        """Handles events for closing pygame window, keypresses, sound timer 
-        beep, and save state. keyPressed value of -1 means invalid key.
-        """
+    def _eventHandler(self):
+        # Handles events for closing pygame window, keypresses, sound timer
+        # beep, and save state. keyPressed value of -1 means invalid key.
+        
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -116,22 +116,22 @@ class Chip8Emulator:
                         print("No valid save state!")
 
                 else:
-                    self.keyPressed = self.keyMap(event.key)
+                    self.keyPressed = self._keyMap(event.key)
 
             elif (event.type == KEYUP):
-                if (self.keyPressed == self.keyMap(event.key)):
+                if (self.keyPressed == self._keyMap(event.key)):
                     self.keyPressed = -1
 
             elif (event.type == self.DECREMENT_TIMER):
-                self.decrementTimers()
+                self._decrementTimers()
 
         if (self.soundTimer > 0):
             winsound.Beep(self.beepFreq, self.beepDuration)
 
-    def keyMap(self, keys):
-        """ Converts valid key press into hex value. Invalid key press is 
-        treated as no key pressed and has value -1.
-        """
+    def _keyMap(self, keys):
+        # Converts valid key press into hex value. Invalid key press is treated
+        # as no key pressed and has value -1.
+        
         switcher = {
             K_x: 0x0,
             K_1: 0x1,
@@ -152,21 +152,21 @@ class Chip8Emulator:
         }   
         return switcher.get(keys, -1)
 
-    def fetchOpcode(self):
-        """Get opcode from memory at the location stored in the program counter.
-        Need to read in 2 bytes from memory since each memory register holds 
-        only 2 bytes and an opcode is 4 bytes in length. Increment the program 
-        counter after reading in opcode.
-        """
+    def _fetchOpcode(self):
+        # Get opcode from memory at the location stored in the program
+        # counter.Need to read in 2 bytes from memory since each memory register
+        # holds only 2 bytes and an opcode is 4 bytes in length. Increment the
+        # program counter after reading in opcode.
+        
         self.op = 0x0
         self.op = (self.memory[self.pc] << 8) | self.memory[self.pc + 1]
         self.pc += 2
 
-    def executeOpcode(self):
-        """Parse the opcode into variables. The format is 0x[msd][x][y][lsd]. 
-        kk is the 2 smallest bytes and nnn is the 3 smallest bytes. An invalid 
-        opcode will cause the program to quit.
-        """
+    def _executeOpcode(self):
+        # Parse the opcode into variables. The format is 0x[msd][x][y][lsd]. kk
+        # is the 2 smallest bytes and nnn is the 3 smallest bytes. An invalid
+        # opcode will cause the program to quit.
+        
         msd = self.op >> 12
         x = (self.op & 0x0F00) >> 8
         y = (self.op & 0x00F0) >> 4
@@ -340,7 +340,7 @@ class Chip8Emulator:
                     # Fx0A - LD Vx, key. Store value of key press in Vx. All 
                     # exeution is stopped until key is pressed.
                     while (self.keyPressed == -1 and self.running):
-                        self.eventHandler()
+                        self._eventHandler()
 
                     self.v[x] = self.keyPressed
 
@@ -390,8 +390,8 @@ class Chip8Emulator:
                 print("Invalid opcode", hex(self.op), ". Exiting...")
                 self.running = False
         
-    def decrementTimers(self):
-        """Decrement the timer values at a rate of 60 Hz."""        
+    def _decrementTimers(self):
+        # Decrement the timer values at a rate of 60 Hz.     
         self.delayTimer = max(self.delayTimer - 1, 0)
         self.soundTimer = max(self.soundTimer - 1, 0)
 
@@ -399,7 +399,7 @@ class Chip8Emulator:
         """Main execution loop. Calls all the required functions to run the
         CHIP8 emulator.
         """
-        self.eventHandler()
-        self.fetchOpcode()
-        self.executeOpcode()
+        self._eventHandler()
+        self._fetchOpcode()
+        self._executeOpcode()
         self.screen.update()
