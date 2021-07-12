@@ -1,5 +1,8 @@
 """Class for handling save state."""
 
+PIXEL_WIDTH = 64
+PIXEL_HEIGHT = 32
+
 class Chip8SaveState():
     def __init__(self):
         """Initialize a save state instance. The class variables are nearly the 
@@ -79,7 +82,7 @@ class Chip8SaveState():
         # Draw the saved screen.
         cpu.screen.clearScreen()
 
-        for y in range(32):
-            for x in range(64):
+        for y in range(PIXEL_HEIGHT):
+            for x in range(PIXEL_WIDTH):
                 if (cpu.screen.pixelMap[y][x] == 1):
                     cpu.screen.setPixel(x, y)
