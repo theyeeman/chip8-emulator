@@ -13,7 +13,7 @@ def getEmulatorVariables():
     title = "CHIP-8 Setup"
     fieldNames = [
         "Clock Speed (Hz) (min 30, max 600)", 
-        "Screen Scale (min 1, max 20)",
+        "Screen Scale Multiplier (min 1, max 20)",
         ]
     fieldValues = easygui.multenterbox(msg, title, fieldNames)
 
