@@ -4,8 +4,10 @@ screen is (x=0, y=0)
 
 from pygame import Color, display, draw
 
-_pixelOff = Color(0, 0, 0, 255)
-_pixelOn = Color(255, 255, 255, 255)
+PIXEL_OFF = Color(0, 0, 0, 255)
+PIXEL_ON = Color(255, 255, 255, 255)
+PIXEL_WIDTH = 64
+PIXEL_HEIGHT = 32
 
 class Chip8Screen:
     def __init__(self, scale=10):
@@ -13,8 +15,8 @@ class Chip8Screen:
         screen. A custom screen scale can passed to this function to suit any 
         size screen.
         """
-        self.width = 64 * scale
-        self.height = 32 * scale
+        self.width = PIXEL_WIDTH * scale
+        self.height = PIXEL_HEIGHT * scale
         self.scale = scale
         self.pixelMap = []
 
@@ -28,7 +30,7 @@ class Chip8Screen:
 
     def clearScreen(self):
         """Set all pixels on screen to off."""
-        self.surface.fill(_pixelOff)
+        self.surface.fill(PIXEL_OFF)
 
     def setPixel(self, x, y):
         """Set a pixel in the buffer to be on at a specific x, y location. Need
@@ -37,7 +39,7 @@ class Chip8Screen:
         x_pos = x * self.scale
         y_pos = y * self.scale
 
-        draw.rect(self.surface, _pixelOn, 
+        draw.rect(self.surface, PIXEL_ON, 
                 (x_pos, y_pos, self.scale, self.scale))
 
     def resetPixel(self, x, y):
@@ -47,7 +49,7 @@ class Chip8Screen:
         x_pos = x * self.scale
         y_pos = y * self.scale
 
-        draw.rect(self.surface, _pixelOff, 
+        draw.rect(self.surface, PIXEL_OFF, 
                 (x_pos, y_pos, self.scale, self.scale))
 
     def getPixel(self, x, y):
@@ -57,7 +59,7 @@ class Chip8Screen:
 
         pixelState = self.surface.get_at((x_pos, y_pos))
 
-        if (pixelState == _pixelOff):
+        if (pixelState == PIXEL_OFF):
             return False
         else:
             return True
@@ -69,8 +71,8 @@ class Chip8Screen:
         self.pixelMap.clear()
         tempMap = []
 
-        for y in range(32):
-            for x in range(64):
+        for y in range(PIXEL_HEIGHT):
+            for x in range(PIXEL_WIDTH):
                 if (self.getPixel(x, y)):
                     tempMap.append(1)
                 else:
@@ -91,12 +93,12 @@ class Chip8Screen:
             mask = 1
             if (byte & (mask << i) != 0):
                 # Pixel at (x, y) commanded on
-                if (not self.getPixel((x + 7 - i) % 64, y % 32)):
+                if (not self.getPixel((x + 7 - i) % PIXEL_WIDTH, y % PIXEL_HEIGHT)):
                     # Pixel is off, so turn on this pixel
-                    self.setPixel((x + 7 - i) % 64, y % 32)
+                    self.setPixel((x + 7 - i) % PIXEL_WIDTH, y % PIXEL_HEIGHT)
                 else:
                     # Pixel is already on, so turn this pixel off and set v[0xF]
-                    self.resetPixel((x + 7 - i) % 64, y % 32)
+                    self.resetPixel((x + 7 - i) % PIXEL_WIDTH, y % PIXEL_HEIGHT)
                     setVF = True
         
         return setVF
